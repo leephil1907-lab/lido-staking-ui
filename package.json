@@ -1,6 +1,7 @@
 {
-  "name": "lido-stake-app",
+  "name": "lido-staking-ui",
   "version": "1.0.0",
+  "private": true,
   "description": "Lido Liquid Staking dApp",
   "type": "module",
   "scripts": {
@@ -15,5 +16,14 @@
     "@reown/appkit": "^1.0.0",
     "@reown/appkit-adapter-ethers": "^1.0.0",
     "ethers": "^6.9.0"
-  }
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leephil1907-lab/lido-staking-ui.git"
+  },
+  "author": "leephil1907-lab",
+  "license": "MIT"
 }

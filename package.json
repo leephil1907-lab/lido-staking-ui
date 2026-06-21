@@ -1,0 +1,19 @@
+{
+  "name": "lido-stake-app",
+  "version": "1.0.0",
+  "description": "Lido Liquid Staking dApp",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  },
+  "dependencies": {
+    "@reown/appkit": "^1.0.0",
+    "@reown/appkit-adapter-ethers": "^1.0.0",
+    "ethers": "^6.9.0"
+  }
+}

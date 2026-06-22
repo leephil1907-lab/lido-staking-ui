@@ -1,0 +1,55 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
+  "public": true,
+  "env": [
+    {
+      "key": "VITE_PROJECT_ID",
+      "description": "Reown AppKit Project ID for wallet connection"
+    },
+    {
+      "key": "VITE_CONTRACT_ADDRESS",
+      "description": "Lido staking contract address on the blockchain"
+    },
+    {
+      "key": "VITE_NETWORK_ID",
+      "description": "Target network ID (1 for mainnet, 5 for Goerli, etc.)"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/index.html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600, s-maxage=3600"
+        }
+      ]
+    },
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "functions": {
+    "api/**.js": {
+      "memory": 1024,
+      "maxDuration": 60
+    }
+  },
+  "regions": ["iad1"],
+  "buildOutput": "dist"
+}

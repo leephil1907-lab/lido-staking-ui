@@ -1,20 +1,14 @@
+cd lido-staking-ui
+cat > vercel.json << 'EOF'
 {
   "version": 2,
   "buildCommand": "npm run build",
- 
+  "outputDirectory": "dist",
   "framework": "vite",
-  "env": [
+  "routes": [
     {
-      "key": "VITE_PROJECT_ID",
-      "description": "Reown AppKit Project ID for wallet connection"
-    },
-    {
-      "key": "VITE_CONTRACT_ADDRESS",
-      "description": "Lido staking contract address on the blockchain"
-    },
-    {
-      "key": "VITE_NETWORK_ID",
-      "description": "Target network ID (1 for mainnet, 5 for Goerli, etc.)"
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ],
   "headers": [
@@ -36,17 +30,6 @@
         }
       ]
     }
-  ],
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ],
-  "functions": {
-    "api/**.js": {
-      "memory": 1024,
-      "maxDuration": 60
-    }
-
+  ]
 }
+EOF

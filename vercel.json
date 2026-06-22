@@ -1,7 +1,7 @@
 {
   "version": 2,
   "buildCommand": "npm run build",
-  "outputDirectory": "dist",
+ 
   "framework": "vite",
   "env": [
     {
@@ -48,7 +48,5 @@
       "memory": 1024,
       "maxDuration": 60
     }
-  },
-  "regions": ["iad1"],
-  "buildOutput": "dist"
+
 }

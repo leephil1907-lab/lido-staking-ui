@@ -3,7 +3,6 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
-  "public": true,
   "env": [
     {
       "key": "VITE_PROJECT_ID",

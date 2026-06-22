@@ -1,5 +1,3 @@
-cd lido-staking-ui
-cat > vercel.json << 'EOF'
 {
   "version": 2,
   "buildCommand": "npm run build",
@@ -31,5 +29,3 @@ cat > vercel.json << 'EOF'
       ]
     }
   ]
-}
-EOF

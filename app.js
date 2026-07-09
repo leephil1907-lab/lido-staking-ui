@@ -38,10 +38,7 @@ let lidoContract = null;
 let ethBalance = 0;
 let stethBalance = 0;
 
-const connectBtn = document.getElementById('connectBtn');
-const stakeBtn = document.getElementById('stakeBtn');
-const unstakeBtn = document.getElementById('unstakeBtn');
-const stakeAmount = document.getElementById('stakeAmount');
+// Note: DOM elements are looked up at runtime inside init/start to ensure the DOM is ready.
 
 async function init() {
     try {
@@ -54,7 +51,10 @@ async function init() {
         else handleDisconnect();
     });
     
-    stakeAmount.addEventListener('input', updateAnnualReward);
+    const stakeElem = document.getElementById('stakeAmount');
+    if (stakeElem) {
+        stakeElem.addEventListener('input', updateAnnualReward);
+    }
 }
 
 async function handleConnect() {
@@ -80,23 +80,33 @@ async function handleConnect() {
 
 function handleDisconnect() {
     provider = signer = userAddress = lidoContract = null;
-    connectBtn.textContent = 'Connect Wallet';
-    connectBtn.classList.remove('connected');
-    stakeBtn.textContent = 'Connect Wallet to Stake';
-    stakeBtn.disabled = false;
-    unstakeBtn.textContent = 'Connect Wallet to Unstake';
-    unstakeBtn.disabled = true;
-    document.getElementById('ethBalance').textContent = '0.00';
-    document.getElementById('userSteth').textContent = '0.00';
+    // update UI to default
+    const btn = document.getElementById('connectBtn');
+    if (btn) btn.textContent = 'Connect Wallet';
+    const ethEl = document.getElementById('ethBalance');
+    const userStethEl = document.getElementById('userSteth');
+    if (ethEl) ethEl.textContent = '0.00';
+    if (userStethEl) userStethEl.textContent = '0.00';
 }
 
 function updateWalletUI() {
-    connectBtn.textContent = `${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`;
-    connectBtn.classList.add('connected');
-    stakeBtn.textContent = 'Stake ETH';
-    stakeBtn.disabled = false;
-    unstakeBtn.textContent = 'Request Withdrawal';
-    unstakeBtn.disabled = false;
+    const btn = document.getElementById('connectBtn');
+    if (!btn) return;
+    if (userAddress) {
+        btn.textContent = `${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`;
+        btn.classList.add('connected');
+        const stakeBtn = document.getElementById('stakeBtn');
+        if (stakeBtn) { stakeBtn.textContent = 'Stake ETH'; stakeBtn.disabled = false; }
+        const unstakeBtn = document.getElementById('unstakeBtn');
+        if (unstakeBtn) { unstakeBtn.textContent = 'Request Withdrawal'; unstakeBtn.disabled = false; }
+    } else {
+        btn.textContent = 'Connect Wallet';
+        btn.classList.remove('connected');
+        const stakeBtn = document.getElementById('stakeBtn');
+        if (stakeBtn) stakeBtn.textContent = 'Connect Wallet to Stake';
+        const unstakeBtn = document.getElementById('unstakeBtn');
+        if (unstakeBtn) { unstakeBtn.textContent = 'Connect Wallet to Unstake'; unstakeBtn.disabled = true; }
+    }
 }
 
 async function updateBalances() {
@@ -106,19 +116,25 @@ async function updateBalances() {
         
         const balance = await provider.getBalance(userAddress);
         ethBalance = parseFloat(ethers.formatEther(balance));
-        document.getElementById('ethBalance').textContent = ethBalance.toFixed(4);
-        document.getElementById('unstakeAvailable').textContent = ethBalance.toFixed(4);
+        const ethEl = document.getElementById('ethBalance');
+        if (ethEl) ethEl.textContent = ethBalance.toFixed(4);
+        const unstakeAvailableEl = document.getElementById('unstakeAvailable');
+        if (unstakeAvailableEl) unstakeAvailableEl.textContent = ethBalance.toFixed(4);
         
         const stethBal = await lidoContract.balanceOf(userAddress);
         stethBalance = parseFloat(ethers.formatEther(stethBal));
-        document.getElementById('userSteth').textContent = stethBalance.toFixed(4);
-        document.getElementById('stethBalanceDisplay').textContent = stethBalance.toFixed(4) + ' stETH';
+        const userStethEl = document.getElementById('userSteth');
+        if (userStethEl) userStethEl.textContent = stethBalance.toFixed(4);
+        const stethDisplay = document.getElementById('stethBalanceDisplay');
+        if (stethDisplay) stethDisplay.textContent = stethBalance.toFixed(4) + ' stETH';
         
         const rewards = stethBalance > 0 ? (stethBalance * 0.038) : 0;
-        document.getElementById('rewardsEarned').textContent = '+' + rewards.toFixed(4) + ' ETH';
+        const rewardsEl = document.getElementById('rewardsEarned');
+        if (rewardsEl) rewardsEl.textContent = '+' + rewards.toFixed(4) + ' ETH';
         
         const usdValue = stethBalance * 3000;
-        document.getElementById('currentValue').textContent = '$' + usdValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        const currentValueEl = document.getElementById('currentValue');
+        if (currentValueEl) currentValueEl.textContent = '$' + usdValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     } catch (error) {
         console.error('Balance error:', error);
     }
@@ -131,7 +147,8 @@ window.stakeETH = async function() {
     }
     
     const { ethers } = await import('https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.min.js');
-    const amount = parseFloat(stakeAmount.value);
+    const stakeAmountEl = document.getElementById('stakeAmount');
+    const amount = stakeAmountEl ? parseFloat(stakeAmountEl.value) : NaN;
     
     if (!amount || amount <= 0) {
         showNotification('Enter valid amount', 'error');
@@ -143,22 +160,22 @@ window.stakeETH = async function() {
     }
     
     try {
-        stakeBtn.disabled = true;
-        stakeBtn.textContent = 'Processing...';
+        const stakeBtn = document.getElementById('stakeBtn');
+        if (stakeBtn) { stakeBtn.disabled = true; stakeBtn.textContent = 'Processing...'; }
         
         const value = ethers.parseEther(amount.toString());
         const tx = await lidoContract.submit(ethers.ZeroAddress, { value });
         await tx.wait();
         
         showNotification(`Staked ${amount} ETH!`, 'success');
-        stakeAmount.value = '';
+        if (stakeAmountEl) stakeAmountEl.value = '';
         updateAnnualReward();
         await updateBalances();
     } catch (error) {
         showNotification('Transaction failed', 'error');
     } finally {
-        stakeBtn.disabled = false;
-        stakeBtn.textContent = 'Stake ETH';
+        const stakeBtn = document.getElementById('stakeBtn');
+        if (stakeBtn) { stakeBtn.disabled = false; stakeBtn.textContent = 'Stake ETH'; }
     }
 };
 
@@ -181,55 +198,63 @@ window.unstakeETH = async function() {
     }
     
     try {
-        unstakeBtn.disabled = true;
-        unstakeBtn.textContent = 'Processing...';
+        const unstakeBtn = document.getElementById('unstakeBtn');
+        if (unstakeBtn) { unstakeBtn.disabled = true; unstakeBtn.textContent = 'Processing...'; }
         
-        const withdrawalQueue = new ethers.Contract(
+        const withdrawalQueue = new (await import('https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.min.js')).ethers.Contract(
             LIDO_CONTRACTS.withdrawalQueue,
             ["function requestWithdrawals(uint256[] calldata _amounts, address _owner) external returns (uint256[] memory requestIds)"],
             signer
         );
         
-        const ethAmount = ethers.parseEther(amount.toString());
+        const ethAmount = (await import('https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.min.js')).ethers.parseEther(amount.toString());
         const shares = await lidoContract.getSharesByPooledEth(ethAmount);
         
         const tx = await withdrawalQueue.requestWithdrawals([shares], userAddress);
         await tx.wait();
         
         showNotification('Withdrawal requested!', 'success');
-        document.getElementById('unstakeAmount').value = '';
+        const unstakeEl = document.getElementById('unstakeAmount');
+        if (unstakeEl) unstakeEl.value = '';
         await updateBalances();
     } catch (error) {
         showNotification('Transaction failed', 'error');
     } finally {
-        unstakeBtn.disabled = false;
-        unstakeBtn.textContent = 'Request Withdrawal';
+        const unstakeBtn = document.getElementById('unstakeBtn');
+        if (unstakeBtn) { unstakeBtn.disabled = false; unstakeBtn.textContent = 'Request Withdrawal'; }
     }
 };
 
 window.setMaxStake = function() {
     if (ethBalance > 0.01) {
-        stakeAmount.value = (ethBalance - 0.01).toFixed(4);
-        updateAnnualReward();
+        const stakeElem = document.getElementById('stakeAmount');
+        if (stakeElem) {
+            stakeElem.value = (ethBalance - 0.01).toFixed(4);
+            updateAnnualReward();
+        }
     }
 };
 
 window.setMaxUnstake = function() {
     if (stethBalance > 0) {
-        document.getElementById('unstakeAmount').value = stethBalance.toFixed(4);
+        const unstakeEl = document.getElementById('unstakeAmount');
+        if (unstakeEl) unstakeEl.value = stethBalance.toFixed(4);
     }
 };
 
 function updateAnnualReward() {
-    const amount = parseFloat(stakeAmount.value) || 0;
+    const stakeElem = document.getElementById('stakeAmount');
+    const amount = stakeElem ? parseFloat(stakeElem.value) || 0 : 0;
     const reward = amount * 0.038;
-    document.getElementById('annualReward').textContent = `+${reward.toFixed(4)} ETH`;
+    const el = document.getElementById('annualReward');
+    if (el) el.textContent = `+${reward.toFixed(4)} ETH`;
 }
 
 function showNotification(message, type) {
     const notification = document.getElementById('notification');
     const icon = document.getElementById('notificationIcon');
     const text = document.getElementById('notificationText');
+    if (!notification || !icon || !text) return;
     
     notification.className = 'notification ' + type;
     icon.textContent = type === 'success' ? '✓' : '✕';
@@ -239,8 +264,26 @@ function showNotification(message, type) {
     setTimeout(() => notification.classList.remove('show'), 3000);
 }
 
-connectBtn.addEventListener('click', async () => {
-    if (!userAddress) await appKit.open();
-});
+// Exported start function — initializes the app once the DOM is ready.
+export async function startApp() {
+    if (typeof document === 'undefined') return;
+    if (document.readyState === 'loading') {
+        await new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve));
+    }
 
-init();
+    // Initialize UI bindings and listeners
+    const connectBtn = document.getElementById('connectBtn');
+    if (connectBtn) {
+        connectBtn.addEventListener('click', async () => {
+            if (!userAddress) await appKit.open();
+        });
+    }
+
+    // Call init to wire providers and update flows
+    await init();
+}
+
+// Auto-start when loaded in a browser (but allow opt-out via Vite env)
+if (typeof window !== 'undefined' && !import.meta.env?.VITE_NO_AUTO_START) {
+    startApp().catch(err => console.error('App start error', err));
+}
